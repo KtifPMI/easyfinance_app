@@ -2,6 +2,7 @@
   "expo": {
     "name": "EasyFinanceApp",
     "slug": "EasyFinanceApp",
+    "scheme": "easyfinanceapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,10 +17,27 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "package": "io.talkbank.easyfinance",
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1b68813e-0f94-4fe8-8787-ab9ef4bd47e0"
+      }
+    },
+    "owner": "blckrdwht",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1b68813e-0f94-4fe8-8787-ab9ef4bd47e0"
     }
   }
 }
