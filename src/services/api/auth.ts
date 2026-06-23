@@ -1,30 +1,37 @@
-import { apiPost, apiGet, setLoggedIn } from './client'
+import { apiCall, setAuth, clearAuth } from './client'
+
+interface EfUser {
+  id: string
+  name: string
+  login: string
+  mail: string
+  currency_default?: string
+}
+
+export interface LoginResult {
+  token: string
+  uid: string
+  users: EfUser[]
+}
 
 export const authApi = {
-  async login(login: string, password: string): Promise<void> {
-    await apiGet('/')
-    await apiPost('/login/', {
-      login,
-      pass: password,
-      autoLogin: '1',
-      ssl: '1',
-    })
-    setLoggedIn(true)
+  async login(login: string, password: string): Promise<{ uid: string }> {
+    const result = await apiCall<LoginResult>('users.get', { email: login, password })
+    if (!result?.token) throw new Error('Не удалось получить токен доступа')
+    setAuth(result.token, result.uid)
+    return { uid: result.uid }
   },
 
   async logout(): Promise<void> {
-    try { await apiGet('/login/exit/') } catch {}
-    setLoggedIn(false)
+    clearAuth()
   },
 
   async checkAuth(): Promise<boolean> {
     try {
-      const data = await apiGet<any>('/account/listAccounts/')
-      const ok = !!(data?.accounts || data?.user_info)
-      setLoggedIn(ok)
-      return ok
+      await apiCall('users.get', {})
+      return true
     } catch {
-      setLoggedIn(false)
+      clearAuth()
       return false
     }
   },

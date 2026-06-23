@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { create } from 'zustand'
 import { authApi } from '../services/api/auth'
-import { setLoggedIn } from '../services/api/client'
+import { setAuth, clearAuth, getAuth } from '../services/api/client'
 import { User } from '../types'
 
-const USER_KEY = 'easyfinance_user'
+const TOKEN_KEY = 'ef_access_token'
+const UID_KEY = 'ef_uid'
+const USER_KEY = 'ef_user'
 
 interface AuthState {
   user: User | null
@@ -25,16 +27,16 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   init: async () => {
     try {
-      const userJson = await AsyncStorage.getItem(USER_KEY)
-      if (userJson) {
-        const user = JSON.parse(userJson)
-        setLoggedIn(true)
-        set({ user })
+      const [token, uid, userJson] = await Promise.all([
+        AsyncStorage.getItem(TOKEN_KEY),
+        AsyncStorage.getItem(UID_KEY),
+        AsyncStorage.getItem(USER_KEY),
+      ])
+      if (token && uid) {
+        setAuth(token, uid)
       }
-      const ok = await authApi.checkAuth()
-      if (!ok) {
-        await AsyncStorage.removeItem(USER_KEY)
-        set({ user: null })
+      if (userJson) {
+        set({ user: JSON.parse(userJson) })
       }
     } finally {
       set({ isInitializing: false })
@@ -44,8 +46,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (login: string, password: string) => {
     set({ isLoading: true, error: null })
     try {
-      await authApi.login(login, password)
-      const user: User = { id: '1', name: login, email: '', currency: 'RUB', plan: 'free' }
+      const { uid } = await authApi.login(login, password)
+      const { accessToken } = getAuth()
+      await Promise.all([
+        AsyncStorage.setItem(TOKEN_KEY, accessToken!),
+        AsyncStorage.setItem(UID_KEY, uid),
+      ])
+      const user: User = { id: uid, name: login, email: login, currency: 'RUB', plan: 'free' }
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(user))
       set({ user, isLoading: false })
     } catch (e: any) {
@@ -56,7 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     await authApi.logout()
-    await AsyncStorage.removeItem(USER_KEY)
+    await AsyncStorage.multiRemove([TOKEN_KEY, UID_KEY, USER_KEY])
     set({ user: null })
   },
 
