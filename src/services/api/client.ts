@@ -31,17 +31,25 @@ function md5(str: string): string {
     for (let i = 0; i < 4; i++) h += hex[(n >> (i * 8 + 4)) & 0xf] + hex[(n >> (i * 8)) & 0xf]
     return h
   }
-  const utf8 = unescape(encodeURIComponent(str))
-  const words: number[] = []
-  const len = utf8.length
-  for (let i = 0; i < len; i++) {
-    words[i >> 2] = (words[i >> 2] || 0) + (utf8.charCodeAt(i) << ((i % 4) * 8))
+  function encode(s: string): number[] {
+    const out: number[] = []
+    for (let i = 0; i < s.length; i++) {
+      let c = s.charCodeAt(i)
+      if (c < 0x80) { out.push(c) }
+      else if (c < 0x800) { out.push(0xc0 | (c >> 6)); out.push(0x80 | (c & 0x3f)) }
+      else if (c < 0xd800 || c >= 0xe000) { out.push(0xe0 | (c >> 12)); out.push(0x80 | ((c >> 6) & 0x3f)); out.push(0x80 | (c & 0x3f)) }
+      else { i++; c = 0x10000 + (((c & 0x3ff) << 10) | (s.charCodeAt(i) & 0x3ff)); out.push(0xf0 | (c >> 18)); out.push(0x80 | ((c >> 12) & 0x3f)); out.push(0x80 | ((c >> 6) & 0x3f)); out.push(0x80 | (c & 0x3f)) }
+    }
+    return out
   }
+  const bytes = encode(str)
+  const words: number[] = []
+  const len = bytes.length
+  for (let i = 0; i < len; i++) words[i >> 2] = (words[i >> 2] || 0) + (bytes[i] << ((i % 4) * 8))
   words[len >> 2] = (words[len >> 2] || 0) + (0x80 << ((len % 4) * 8))
   words[((len + 8) >> 6) * 16 + 14] = len * 8
 
   let a = 0x67452301, b = 0xefcdab89, c = 0x98badcfe, d = 0x10325476
-
   const S = [[7, 12, 17, 22], [5, 9, 14, 20], [4, 11, 16, 23], [6, 10, 15, 21]]
   const K: number[] = []
   for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000)
