@@ -24,6 +24,7 @@ const ACCOUNT_ICONS: Record<string, string> = {
   '15': 'wallet', '16': 'bank-outline',
 }
 const CATEGORY_COLORS = ['#16A34A','#2563EB','#DC2626','#7C3AED','#F97316','#0EA5E9','#DB2777','#334155']
+const CURRENCY_MAP: Record<string, string> = { '1': 'RUB', '2': 'USD', '3': 'EUR', '4': 'GBP', '5': 'CNY' }
 
 interface EfAccount { id: string; name: string; type_id: string; state: string; currency_id: string; balance?: string; init_balance?: string; deleted_at: string | null }
 interface EfCategory { id: string; name: string; type?: string; icon?: string; deleted_at: string | null }
@@ -33,7 +34,7 @@ function mapAccount(a: EfAccount): Account {
   return {
     id: String(a.id), name: a.name,
     balance: Number(a.balance ?? a.init_balance ?? 0),
-    currency: String(a.currency_id),
+    currency: CURRENCY_MAP[a.currency_id] || 'RUB',
     icon: ACCOUNT_ICONS[a.type_id] || 'wallet',
     color: ACCOUNT_COLORS[a.type_id] || '#16A34A',
     includeInTotal: a.state !== '2',
