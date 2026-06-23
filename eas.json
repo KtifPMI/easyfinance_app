@@ -9,8 +9,8 @@
         "buildType": "apk"
       },
       "channel": "preview",
-      "updates": {
-        "enabled": false
+      "env": {
+        "EXPO_UPDATES_DISABLED": "1"
       }
     },
     "production": {
