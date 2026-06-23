@@ -17,7 +17,10 @@ export interface LoginResult {
 export const authApi = {
   async login(login: string, password: string): Promise<{ uid: string }> {
     const result = await apiCall<LoginResult>('users.get', { email: login, password })
-    if (!result?.token) throw new Error('Не удалось получить токен доступа')
+    if (!result?.token) {
+      console.log('Login result:', JSON.stringify(result))
+      throw new Error('Не удалось получить токен доступа (result: ' + JSON.stringify(result).slice(0, 200) + ')')
+    }
     setAuth(result.token, result.uid)
     return { uid: result.uid }
   },

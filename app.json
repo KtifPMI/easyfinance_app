@@ -29,15 +29,15 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "1b68813e-0f94-4fe8-8787-ab9ef4bd47e0"
+        "projectId": "91682f95-3b9b-4aed-916e-d8e9315edf7c"
       }
     },
-    "owner": "blckrdwht",
+    "owner": "leha.grigorev.02",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/1b68813e-0f94-4fe8-8787-ab9ef4bd47e0"
+      "url": "https://u.expo.dev/91682f95-3b9b-4aed-916e-d8e9315edf7c"
     }
   }
 }

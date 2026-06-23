@@ -23,6 +23,10 @@ export function isLoggedIn() {
   return !!_accessToken
 }
 
+export function delay(ms: number): Promise<void> {
+  return new Promise(r => setTimeout(r, ms))
+}
+
 // ---- MD5 implementation (pure JS) ----
 function md5(str: string): string {
   const hex = '0123456789abcdef'
@@ -115,6 +119,7 @@ export async function apiCall<T = any>(method: string, requestData: Record<strin
   try {
     const res = await fetch(`${API_BASE}?${qs}`, { method: 'GET', headers })
     const data = await res.json()
+    console.log('API response:', JSON.stringify(data).slice(0, 500))
     const result = unwrapData(data)
     return result as T
   } catch (err: any) {
