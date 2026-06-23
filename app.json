@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "EasyFinanceApp",
-    "slug": "EasyFinanceApp",
+    "slug": "easyfinance_app",
     "scheme": "easyfinanceapp",
     "version": "1.0.0",
     "orientation": "portrait",
