@@ -1,94 +1,47 @@
-/**
- * Клиент для backend-proxy (см. /server), который безопасно подписывает
- * запросы к EasyFinance API (app_id/secret_key хранятся только на proxy,
- * никогда в мобильном приложении).
- *
- * ВАЖНО: при тестировании через Expo Go на физическом телефоне
- * `localhost` указывает на сам телефон, а не на ваш компьютер.
- * Замените PROXY_URL на адрес компьютера в локальной сети, например
- * "http://192.168.1.50:4000", либо задайте переменную окружения
- * EXPO_PUBLIC_PROXY_URL перед запуском `npx expo start`.
- */
-export const PROXY_URL = process.env.EXPO_PUBLIC_PROXY_URL || 'http://localhost:4000';
-
-export const delay = (ms = 300) => new Promise((res) => setTimeout(res, ms));
+const SITE_BASE = 'https://easyfinance.ru'
 
 export class ApiError extends Error {
-  status?: number;
-  details?: unknown;
+  status?: number
+  details?: unknown
   constructor(message: string, status?: number, details?: unknown) {
-    super(message);
-    this.status = status;
-    this.details = details;
+    super(message)
+    this.status = status
+    this.details = details
   }
 }
 
-let authToken: string | null = null;
-let authUid: string | null = null;
-
-export function setAuthToken(token: string | null) {
-  authToken = token;
-}
-
-export function getAuthToken() {
-  return authToken;
-}
-
-export function setUid(uid: string | null) {
-  authUid = uid;
-}
-
-export function getUid() {
-  return authUid;
-}
-
-export function isDemoMode() {
-  return authToken === 'demo-token';
-}
-
-/**
- * Вызов метода EasyFinance API через backend-proxy.
- * `method` — имя метода API, например "accounts.get", "operations.post".
- */
-export async function efCall<T = any>(
-  method: string,
-  options: {
-    httpMethod?: 'GET' | 'POST';
-    params?: Record<string, string | number | undefined>;
-    body?: unknown;
-    accessToken?: string;
-    uid?: string;
-  } = {}
-): Promise<T> {
-  const access_token = options.accessToken ?? authToken;
-  const uid = options.uid ?? authUid;
-
-  if (!access_token) {
-    throw new ApiError('Нет access_token: пользователь не авторизован', 401);
+export async function apiGet<T = any>(path: string): Promise<T> {
+  const url = `${SITE_BASE}${path}${path.includes('?') ? '&' : '?'}responseMode=json&_=${Date.now()}`
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json, text/html, */*' },
+    credentials: 'include',
+  })
+  if (!res.ok) throw new ApiError(`HTTP ${res.status}`, res.status)
+  const text = await res.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new ApiError('Response is not JSON')
   }
+}
 
-  const res = await fetch(`${PROXY_URL}/api/call`, {
+export async function apiPost<T = any>(path: string, body: Record<string, string>): Promise<T> {
+  const form = new URLSearchParams(body)
+  const res = await fetch(`${SITE_BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      method,
-      httpMethod: options.httpMethod || 'GET',
-      access_token,
-      uid: uid || undefined,
-      params: options.params || {},
-      body: options.body,
-    }),
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new ApiError(
-      data?.message || data?.error || `Ошибка запроса ${method}`,
-      res.status,
-      data?.details
-    );
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form.toString(),
+    credentials: 'include',
+  })
+  const text = await res.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new ApiError('Response is not JSON')
   }
-
-  return data?.response?.response_data as T;
 }
+
+let _isLoggedIn = false
+export function setLoggedIn(v: boolean) { _isLoggedIn = v }
+export function isLoggedIn() { return _isLoggedIn }
